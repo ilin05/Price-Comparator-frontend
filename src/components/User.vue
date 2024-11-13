@@ -293,6 +293,8 @@ export default {
     },
 
     SearchProduct(){
+      this.productList = [];
+      sessionStorage.removeItem('productList');
       axios.get("/user/searchProducts", {
         params: {
           productName: this.searchProduct
@@ -302,6 +304,7 @@ export default {
             //console.log(response.data)
             if (response.data.code === 1) {
               this.productList = response.data.payload;
+              sessionStorage.setItem('productList', JSON.stringify(this.productList));
             }
           })
           .catch(error => {
@@ -333,9 +336,12 @@ export default {
       sessionStorage.clear()
     }
   },
-  // mounted() {
-  //   this.QueryCashier();
-  // }
+  beforeDestroy() {
+    sessionStorage.setItem('productList', JSON.stringify(this.productList));
+  },
+  mounted() {
+    this.productList = JSON.parse(sessionStorage.getItem('productList'));
+  }
 }
 </script>
 

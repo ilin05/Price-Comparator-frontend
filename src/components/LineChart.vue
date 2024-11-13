@@ -1,5 +1,5 @@
 <template>
-  <div ref="chart" style="width: 100%; height: 400px;"></div>
+  <div ref="chart" style="width: 600%; height: 400px;"></div>
 </template>
 
 <script>
@@ -51,12 +51,20 @@ export default {
           text: '价格趋势'
         },
         tooltip: {
-          trigger: 'axis'
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross' // 设置为 'cross' 以显示横向和纵向的指示线
+          }
+        },
+        grid: {
+          left: '20%',
+          right: '10%',
+          bottom: '15%'
         },
         xAxis: {
           type: 'category',
           data: this.chartLabels,
-          // boundaryGap: true, // 设置为 true 以增加横向间距
+          boundaryGap: true, // 设置为 true 以增加横向间距
           axisLabel: {
             interval: 0, // 强制显示所有标签
             rotate: 30, // 旋转标签以增加间距，角度可以根据需要调整
@@ -75,6 +83,9 @@ export default {
           },
           axisLine: {
             show: false // 隐藏 x 轴的纵向线
+          },
+          splitLine: {
+            show: false // 隐藏纵向分割线
           }
         },
         yAxis: {
