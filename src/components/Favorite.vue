@@ -66,6 +66,9 @@
                 </template>
               </el-table-column>
               <el-table-column prop="price" label="价格">
+                <template v-slot="scope">
+                  {{ scope.row.price }}￥
+                </template>
               </el-table-column>
               <el-table-column prop="platform" label="平台">
               </el-table-column>
@@ -88,29 +91,57 @@
     </el-container>
 
     <el-dialog v-model="deleteFavoriteVisible" title="是否取消收藏该商品？取消收藏后，你将不会收到该商品的降价通知！">
-            <template #footer>
-                      <span class="dialog-footer">
-                          <el-button @click="deleteFavoriteVisible = false">取消</el-button>
-                          <el-button type="primary" @click="DeleteFavorite">
-                              确认
-                          </el-button>
-                      </span>
-            </template>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="deleteFavoriteVisible = false">取消</el-button>
+          <el-button type="primary" @click="DeleteFavorite">
+              确认
+          </el-button>
+        </span>
+      </template>
     </el-dialog>
 
-    <el-dialog v-model = "priceHistoryVisible" title="价格历史">
+    <el-dialog v-model = "priceHistoryVisible" title="价格历史" :fullscreen="true">
       <div>
         <el-card>
           <LineChart :chartData="prices" :chartLabels="dates" />
         </el-card>
       </div>
     </el-dialog>
-<!--    <el-dialog v-model = "priceHistoryVisible" title="价格历史">-->
-<!--      <div id="app">-->
-<!--        &lt;!&ndash;为echarts准备一个具备大小的容器dom&ndash;&gt;-->
-<!--        <div id="main" style="width: 600px; height: 400px"></div>-->
-<!--      </div>-->
-<!--    </el-dialog>-->
+
+    <el-dialog v-model = "discountProductListVisible" title="您收藏的商品降价啦！" :fullscreen="true">
+      <el-card title="您收藏的商品降价啦！" class="product_table" >
+        <el-scrollbar height="600px">
+          <el-table :data="discountProductList">
+            <el-table-column prop = "" lable = "图片" width="200">
+              <template v-slot="scope">
+                <img :src="scope.row.imageUrl" alt="图片" class="left-image" />
+                <!--                  <el-image preview-teleported :preview-src-list="imageUrlList"/>-->
+              </template>
+            </el-table-column>
+            <el-table-column prop="name" label="描述">
+              <template v-slot="scope">
+                <a :href="scope.row.link" target="_blank">{{ scope.row.name }}</a>
+              </template>
+            </el-table-column>
+            <el-table-column prop="price" label="当前价格">
+              <template v-slot="scope">
+                <span style="color: red; font-weight: bold; font-size: large;">
+                  {{ scope.row.price }} ￥
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="previousPrice" label="之前价格">
+              <template v-slot="scope">
+                {{ scope.row.previousPrice }}￥
+              </template>
+            </el-table-column>
+            <el-table-column prop="platform" label="平台">
+            </el-table-column>
+          </el-table>
+        </el-scrollbar>
+      </el-card>
+    </el-dialog>
 
   </div>
 </template>
@@ -128,6 +159,7 @@ export default {
     return {
       deleteFavoriteVisible: false,
       priceHistoryVisible: false,
+      discountProductListVisible : false,
 
       showPriceHistoryProductId: '',
       searchProduct : '',
@@ -145,20 +177,22 @@ export default {
         price: 0
       }],
 
+      discountProductList:[{
+        name: '',
+        id: '',
+        specification: '',
+        category: '',
+        imageUrl: '',
+        link: '',
+        platform: '',
+        price: 0,
+        previousPrice: 0,
+      }],
+
       favoriteInfo:{
         productId: '',
         email: ''
       },
-
-      cashierList:[{
-        cashierId :0,
-        cashierName : '1',
-        idNumber : '2',
-        phoneNumber : '3',
-        address : '4',
-        privilege :'5',
-        password :'',
-      }],
 
       imageUrlList:[
 
@@ -175,45 +209,6 @@ export default {
     };
   },
   methods: {
-    // drawLine(id){
-    //   this.charts = echarts.init(document.getElementById(id));
-    //   this.charts.setOption({
-    //     tooltip: {
-    //       trigger: 'axis'
-    //     },
-    //     legend: {
-    //       data: ['价格']
-    //     },
-    //     grid: {
-    //       left: '3%',
-    //       right: '4%',
-    //       bottom: '3%',
-    //       containLabel: true
-    //     },
-    //     toolbox: {
-    //       feature: {
-    //         saveAsImage: {}
-    //       }
-    //     },
-    //     xAxis: {
-    //       type: 'category',
-    //       boundaryGap: false,
-    //       data: this.dates
-    //     },
-    //     yAxis: {
-    //       type: 'value',
-    //       //data: this.prices
-    //     },
-    //     series: [
-    //       {
-    //         name: '价格',
-    //         type: 'line',
-    //         stack: '总量',
-    //         data: this.prices
-    //       }
-    //     ]
-    //   })
-    // },
     DeleteFavorite(){
       this.favoriteEmail = sessionStorage.getItem("token")
       axios.post("/user/deleteFavorites", {
@@ -223,6 +218,7 @@ export default {
           .then(response => {
             if(response.data.code == 1){
               ElMessage.success("取消收藏成功")
+              this.GetFavorites()
             }else{
               ElMessage.error(response.data.message)
             }
@@ -273,6 +269,14 @@ export default {
   },
   mounted() {
     this.GetFavorites();
+    if(sessionStorage.getItem('discountProductList') != null){
+      this.discountProductList = JSON.parse(sessionStorage.getItem('discountProductList'));
+      if(this.discountProductList.length > 0){
+        this.discountProductListVisible = true;
+      }
+      sessionStorage.removeItem('discountProductList');
+    }
+    this.productList = JSON.parse(sessionStorage.getItem('productList'));
   }
 }
 </script>

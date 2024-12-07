@@ -100,11 +100,46 @@ export default {
         email : '',
         password : '',
       },
+
+      discountProductList:[{
+        name: '',
+        id: '',
+        specification: '',
+        category: '',
+        imageUrl: '',
+        link: '',
+        platform: '',
+        price: 0,
+        previousPrice: 0,
+      }]
     }
 
   },
 
   methods:{
+    GetDiscountProducts(){
+      axios.get("/user/checkFavoriteProductsPrice", {
+        params:{
+          email: this.userLoginInfo.email
+        }
+      })
+          .then(response=>{
+            if(response.data.code === 1){
+              this.discountProductList = response.data.payload;
+              sessionStorage.setItem("discountProductList", JSON.stringify(this.discountProductList));
+              // this.discountProductList.forEach((item)=>{
+              //   console.log(item)
+              // })
+              ElMessage.success("查询折扣商品成功");
+              window.location.reload();
+            }else{
+              ElMessage.error(response.data)
+            }
+          })
+          .catch(error =>{
+            ElMessage.error("获取折扣商品失败");
+          })
+    },
     ConfirmUserLogin(){
       axios.post("/user/login",{
         email:this.userLoginInfo.email,
@@ -115,6 +150,7 @@ export default {
             if(response.data.code === 1){
               ElMessage.success("登录成功");
               sessionStorage.setItem("token", response.data.payload);
+              this.GetDiscountProducts();
               router.push('/user');
             }else{
               ElMessage.error(response.data)

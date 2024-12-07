@@ -5,7 +5,7 @@
       <el-header class="title">
         <div style="margin-top: 12px; display: inline-block;">
           <span style="font-size: large; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: bold;">Price Comparator</span>
-          <span style="margin-left :30px; font-size: medium; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: bold;">用户您好！</span>
+          <span style="margin-left :30px; font-size: large; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: bold;">用户您好！</span>
           <RouterLink to="/user">
             <button class="transparent-button">
               <span style="margin-left: 40px; font-size: medium; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: lighter">搜索商品</span>
@@ -57,6 +57,9 @@
                 </template>
               </el-table-column>
               <el-table-column prop="price" label="价格">
+                <template v-slot="scope">
+                  {{ scope.row.price }}￥
+                </template>
               </el-table-column>
               <el-table-column prop="platform" label="平台">
               </el-table-column>
@@ -90,61 +93,39 @@
       </div>
     </el-dialog>
 
-<!--    <el-dialog v-model="addCashierVisible" title="添加出纳员">-->
-<!--      <el-form-->
-<!--          :label-position="left"-->
-<!--          label-width="auto"-->
-<!--          :model="formItems1"-->
-<!--          style="max-width: 600px"-->
-<!--      >-->
-<!--        <el-form-item label="姓名">-->
-<!--          <el-input v-model="formItems1.cashierName" placeholder="请输入姓名"/>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="身份证号">-->
-<!--          <el-input v-model="formItems1.idNumber" placeholder="请输入身份证号"/>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="电话号码">-->
-<!--          <el-input v-model="formItems1.phoneNumber" placeholder="请输入电话号码"/>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="地址">-->
-<!--          <el-input v-model="formItems1.address" placeholder="请输入地址"/>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="出纳员权限">-->
-<!--          <br>-->
-<!--          <el-select v-model="formItems1.privilege" placeholder="请选择权限">-->
-<!--            <el-option label="A" value="A"></el-option>-->
-<!--            <el-option label="B" value="B"></el-option>-->
-<!--            <el-option label="C" value="C"></el-option>-->
-<!--          </el-select>-->
-<!--        </el-form-item>-->
-<!--      </el-form>-->
-<!--      <template #footer>-->
-<!--                <span class="dialog-footer">-->
-<!--                    <el-button @click="addCashierVisible = false">取消</el-button>-->
-<!--                    <el-button type="primary" @click="ConfirmAddCashier">-->
-<!--                        确认-->
-<!--                    </el-button>-->
-<!--                </span>-->
-<!--      </template>-->
-<!--    </el-dialog>-->
-
-<!--    <el-dialog v-model="deleteCashierVisible" title="删除出纳员">-->
-<!--      <span style="font-weight: bold;">请确认删除出纳员信息:</span>-->
-<!--      <p style="padding: 2.5px;"><span style="font-weight: bold;">工号：</span>{{ deleteCashierInfo.cashierId }}</p>-->
-<!--      <p style="padding: 2.5px;"><span style="font-weight: bold;">姓名：</span>{{ deleteCashierInfo.cashierName }}</p>-->
-<!--      <p style="padding: 2.5px;"><span style="font-weight: bold;">身份证号：</span>{{ deleteCashierInfo.idNumber }}</p>-->
-<!--      <p style="padding: 2.5px;"><span style="font-weight: bold;">手机号码：</span>{{ deleteCashierInfo.phoneNumber }}</p>-->
-<!--      <p style="padding: 2.5px;"><span style="font-weight: bold;">地址：</span>{{ deleteCashierInfo.address }}</p>-->
-<!--      <p style="padding: 2.5px;"><span style="font-weight: bold;">权限：</span>{{ deleteCashierInfo.privilege }}</p>-->
-<!--      <template #footer>-->
-<!--                <span class="dialog-footer">-->
-<!--                    <el-button @click="deleteCashierVisible = false">取消</el-button>-->
-<!--                    <el-button type="danger" @click="ConfirmDeleteCashier">-->
-<!--                        删除-->
-<!--                    </el-button>-->
-<!--                </span>-->
-<!--      </template>-->
-<!--    </el-dialog>-->
+    <el-dialog v-model = "discountProductListVisible" title="您收藏的商品降价啦！" :fullscreen="true">
+      <el-card title="您收藏的商品降价啦！" class="product_table" >
+        <el-scrollbar height="600px">
+          <el-table :data="discountProductList">
+            <el-table-column prop = "" lable = "图片" width="200">
+              <template v-slot="scope">
+                <img :src="scope.row.imageUrl" alt="图片" class="left-image" />
+                <!--                  <el-image preview-teleported :preview-src-list="imageUrlList"/>-->
+              </template>
+            </el-table-column>
+            <el-table-column prop="name" label="描述">
+              <template v-slot="scope">
+                <a :href="scope.row.link" target="_blank">{{ scope.row.name }}</a>
+              </template>
+            </el-table-column>
+            <el-table-column prop="price" label="当前价格">
+              <template v-slot="scope">
+                <span style="color: red; font-weight: bold; font-size: large;">
+                  {{ scope.row.price }} ￥
+                </span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="previousPrice" label="之前价格">
+              <template v-slot="scope">
+                {{ scope.row.previousPrice }}￥
+              </template>
+            </el-table-column>
+            <el-table-column prop="platform" label="平台">
+            </el-table-column>
+          </el-table>
+        </el-scrollbar>
+      </el-card>
+    </el-dialog>
 
 <!--    <el-dialog v-model="modifyCashierVisible" title="修改出纳员信息">-->
 <!--      <el-form-->
@@ -200,6 +181,7 @@ export default {
       modifyCashierVisible :false,
       deleteCashierVisible : false,
       priceHistoryVisible : false,
+      discountProductListVisible : false,
       searchProduct : '',
       favoriteProductId : '',
       favoriteEmail: '',
@@ -240,6 +222,18 @@ export default {
         link: '',
         platform: '',
         price: 0
+      }],
+
+      discountProductList:[{
+        name: '',
+        id: '',
+        specification: '',
+        category: '',
+        imageUrl: '',
+        link: '',
+        platform: '',
+        price: 0,
+        previousPrice: 0,
       }],
 
       favoriteInfo:{
@@ -293,6 +287,7 @@ export default {
     },
 
     SearchProduct(){
+      ElMessage.success("正在搜索商品，这可能会花费一分钟左右的时间，请耐心等待~");
       this.productList = [];
       sessionStorage.removeItem('productList');
       axios.get("/user/searchProducts", {
@@ -305,6 +300,7 @@ export default {
             if (response.data.code === 1) {
               this.productList = response.data.payload;
               sessionStorage.setItem('productList', JSON.stringify(this.productList));
+              ElMessage.success("搜索完毕，共找到" + this.productList.length + "个商品");
             }
           })
           .catch(error => {
@@ -340,6 +336,13 @@ export default {
     sessionStorage.setItem('productList', JSON.stringify(this.productList));
   },
   mounted() {
+    if(sessionStorage.getItem('discountProductList') != null){
+      this.discountProductList = JSON.parse(sessionStorage.getItem('discountProductList'));
+      if(this.discountProductList.length > 0){
+        this.discountProductListVisible = true;
+      }
+      sessionStorage.removeItem('discountProductList');
+    }
     this.productList = JSON.parse(sessionStorage.getItem('productList'));
   }
 }
