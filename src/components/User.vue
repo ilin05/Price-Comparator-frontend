@@ -2,7 +2,7 @@
   <div class="main">
 
     <el-container>
-      <el-header class="title">
+      <el-header class="title" v-if="!isMobile">
         <div style="margin-top: 12px; display: inline-block;">
           <span style="font-size: large; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: bold;">Price Comparator</span>
           <span style="margin-left :30px; font-size: large; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: bold;">用户您好！</span>
@@ -28,26 +28,65 @@
             <span style="font-size: medium; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: normal;">登出</span>
           </el-button>
         </RouterLink>
+        <div class="avatar-container">
+          <el-popover
+              ref="popover"
+              placement="bottom"
+              :width="300"
+              trigger="hover"
+          >
+            <template #reference>
+              <el-avatar :icon="UserFilled" />
+            </template>
+            <p>我的信息</p>
+            <p><strong>用户名:</strong> {{ this.user.name }}</p>
+            <p><strong>邮箱:</strong> {{ this.user.email }}</p>
+            <div style="text-align: right; margin: 0">
+              <el-button size="small" text @click="modifyPasswordVisible = true">修改密码</el-button>
+              <el-button size="small" text @click="modifyUserNameVisible = true">修改用户名</el-button>
+              <RouterLink to="/login">
+                <el-button size="small" type="primary" style="margin-left: 12px" @click="DeleteToken">登出</el-button>
+              </RouterLink>
+            </div>
+          </el-popover>
+        </div>
       </el-header>
 
-      <div style="width:30%;margin:0 auto; padding-top:5vh;">
+      <el-header class="title" v-if="isMobile">
+        <div style="margin-top: 12px; display: inline-block;">
+          <span style="font-size: large; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: bold;">Price Comparator</span>
+          <RouterLink to="/login">
+            <el-button type="primary" style="margin-left: 40px; margin-top: 6px; padding-right: 10px;" @click="DeleteToken">
+              <span style="font-size: medium; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: normal;">登出</span>
+            </el-button>
+          </RouterLink>
+        </div>
+      </el-header>
 
-        <el-input v-model="this.searchProduct" style="display:inline; " placeholder="输入要查询的商品">
+      <div v-if="!isMobile" style="width:30%;margin:0 auto; padding-top:3vh;">
+        <el-input v-model="this.searchProduct" placeholder="输入要查询的商品">
           <template #append>
             <el-button type="primary" @click="SearchProduct">查询</el-button>
           </template>
         </el-input>
+      </div>
 
+      <div v-if="isMobile" style="width:50%;margin:0 auto; padding-top:2vh;">
+        <el-input v-model="this.searchProduct" placeholder="输入要查询的商品">
+          <template #append>
+            <el-button type="primary" @click="SearchProduct">查询</el-button>
+          </template>
+        </el-input>
       </div>
 
 
-      <el-container>
-        <el-card title="商品列表" class="product_table" >
+      <el-container v-if="!isMobile">
+        <el-card title="商品列表" class="product_table">
           <el-scrollbar height="600px">
             <el-table :data="productList">
               <el-table-column prop = "" lable = "图片" width="200">
                 <template v-slot="scope">
-                  <img :src="scope.row.imageUrl" alt="图片" class="left-image" />
+                  <img :src="scope.row.imageUrl || defaultImage" alt="图片" class="left-image" />
 <!--                  <el-image preview-teleported :preview-src-list="imageUrlList"/>-->
                 </template>
               </el-table-column>
@@ -83,6 +122,48 @@
           </el-scrollbar>
         </el-card>
       </el-container>
+
+      <el-container v-if="isMobile">
+        <el-scrollbar height="600px">
+          <div class="card-box" v-for="product in productList" v-if="isMobile">
+            <div>
+              <img :src="product.imageUrl || defaultImage" alt="图片" class="inbox-image" />
+              <el-divider />
+              <div>
+                <a :href="product.link" target="_blank">{{ product.name }}</a>
+              </div>
+              <div style="margin-left: 10px; text-align: start; font-size: 16px;">
+                <p style="padding: 2.5px;"><span style="font-weight: bold;">价格：</span>{{ product.price }}￥</p>
+                <p style="padding: 2.5px;"><span style="font-weight: bold;">平台：</span>{{ product.platform }}</p>
+              </div>
+            </div>
+            <div class="button-container">
+              <button class="collect-button" @click = "this.favoriteProductId = product.id, deleteFavoriteVisible = true">
+                收藏商品
+              </button>
+              <button class="history-button" @click = "this.showPriceHistoryProductId = product.id, GetProductPriceHistory()">
+                查看历史价格
+              </button>
+            </div>
+          </div>
+        </el-scrollbar>
+      </el-container>
+
+      <el-footer class="footer" v-if="isMobile">
+        <div class="footer-content">
+          <RouterLink to="/user">
+            <el-button type="text" class="footer-button">
+              <el-icon><User /></el-icon>
+            </el-button>
+          </RouterLink>
+          <RouterLink to="/favorites">
+            <el-button type="text" class="footer-button">
+              <el-icon><Star /></el-icon>
+            </el-button>
+          </RouterLink>
+        </div>
+      </el-footer>
+
     </el-container>
 
     <el-dialog v-model = "priceHistoryVisible" title="价格历史">
@@ -93,7 +174,7 @@
       </div>
     </el-dialog>
 
-    <el-dialog v-model = "discountProductListVisible" title="您收藏的商品降价啦！" :fullscreen="true">
+    <el-dialog v-model = "discountProductListVisible" title="您收藏的商品降价啦！" :fullscreen="true" v-if="!isMobile">
       <el-card title="您收藏的商品降价啦！" class="product_table" >
         <el-scrollbar height="600px">
           <el-table :data="discountProductList">
@@ -127,43 +208,67 @@
       </el-card>
     </el-dialog>
 
-<!--    <el-dialog v-model="modifyCashierVisible" title="修改出纳员信息">-->
-<!--      <el-form-->
-<!--          :label-position="left"-->
-<!--          label-width="auto"-->
-<!--          :model="modifyCashierInfo"-->
-<!--          style="max-width: 600px"-->
-<!--      >-->
-<!--        <el-form-item label="姓名">-->
-<!--          <el-input v-model="modifyCashierInfo.cashierName" placeholder="请输入姓名"/>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="身份证号">-->
-<!--          <el-input v-model="modifyCashierInfo.idNumber" placeholder="请输入身份证号"/>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="电话号码">-->
-<!--          <el-input v-model="modifyCashierInfo.phoneNumber" placeholder="请输入电话号码"/>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="地址">-->
-<!--          <el-input v-model="modifyCashierInfo.address" placeholder="请输入地址"/>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="出纳员权限">-->
-<!--          <br>-->
-<!--          <el-select v-model= "modifyCashierInfo.privilege" placeholder="请选择权限">-->
-<!--            <el-option label="A" value="A"></el-option>-->
-<!--            <el-option label="B" value="B"></el-option>-->
-<!--            <el-option label="C" value="C"></el-option>-->
-<!--          </el-select>-->
-<!--        </el-form-item>-->
-<!--      </el-form>-->
-<!--      <template #footer>-->
-<!--                <span class="dialog-footer">-->
-<!--                    <el-button @click="modifyCashierVisible = false">取消</el-button>-->
-<!--                    <el-button type="primary" @click="ConfirmModifyCashier">-->
-<!--                        确认-->
-<!--                    </el-button>-->
-<!--                </span>-->
-<!--      </template>-->
-<!--    </el-dialog>-->
+    <el-dialog title="您收藏的商品降价啦！" :fullscreen="true" v-if="isMobile">
+      <el-card title="您收藏的商品降价啦！" class="product_table" >
+        <el-scrollbar height="600px">
+          <div class="card-box" v-for="product in discountProductList" v-if="isMobile">
+            <div>
+              <img :src="product.imageUrl" alt="图片" class="inbox-image" />
+              <el-divider />
+              <div>
+                <a :href="product.link" target="_blank">{{ product.name }}</a>
+              </div>
+              <div style="margin-left: 10px; text-align: start; font-size: 16px;">
+                <p style="padding: 2.5px;"><span style="font-weight: bold;">之前价格：</span> <span style="color: red; font-weight: bold; font-size: large;">{{ product.previousPrice }}￥</span></p>
+                <p style="padding: 2.5px;"><span style="font-weight: bold;">现在价格：</span> <span style="color: red; font-weight: bold; font-size: large;">{{ product.price }}￥</span></p>
+                <p style="padding: 2.5px;"><span style="font-weight: bold;">平台：</span>{{ product.platform }}</p>
+              </div>
+            </div>
+          </div>
+        </el-scrollbar>
+      </el-card>
+    </el-dialog>
+
+    <el-dialog v-model="modifyPasswordVisible" title="修改密码">
+      <el-form
+          :label-position="left"
+          label-width="auto"
+          style="max-width: 600px"
+      >
+        <el-form-item label="旧密码">
+          <el-input type="password" v-model="modifyPasswordInfo.oldPassword" placeholder="请输入旧密码"/>
+        </el-form-item>
+        <el-form-item label="新密码">
+          <el-input type="password" v-model="modifyPasswordInfo.newPassword" placeholder="请输入新密码"/>
+        </el-form-item>
+        <el-form-item label="再次输入新密码" :error="passwordMismatch ? '两次输入的新密码不一致' : ''">
+          <el-input type="password" v-model="modifyPasswordInfo.newPasswordAgain" placeholder="请再次输入新密码"/>
+        </el-form-item>
+        <div style="text-align: right; margin: 0">
+          <el-button size="small" text @click="modifyPasswordVisible = false">取消</el-button>
+          <el-button size="small" type="primary" @click="ConfirmModifyPassword" :disabled="passwordMismatch">确认</el-button>
+        </div>
+      </el-form>
+    </el-dialog>
+
+    <el-dialog v-model="modifyUserNameVisible" title="修改用户名">
+      <el-form
+          :label-position="left"
+          label-width="auto"
+          style="max-width: 600px"
+      >
+        <el-form-item label="新用户名">
+          <el-input v-model="modifyUserNameInfo.newUserName" placeholder="请输入新的用户名"/>
+        </el-form-item>
+        <el-form-item label="密码">
+          <el-input type="password" v-model="modifyUserNameInfo.password" placeholder="请输入密码"/>
+        </el-form-item>
+        <div style="text-align: right; margin: 0">
+          <el-button size="small" text @click="modifyUserNameVisible = false">取消</el-button>
+          <el-button size="small" type="primary" @click="ConfirmModifyUserName">确认</el-button>
+        </div>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
 
@@ -172,20 +277,39 @@ import axios from "axios";
 import {ElMessage} from "element-plus";
 import router from "@/router/index.js";
 import LineChart from "@/components/LineChart.vue";
+import {detectDevice} from "@/device.js";
+import defaultImage from '@/assets/淘宝图标.png'; // 引入默认图片
+import { UserFilled, Reading } from '@element-plus/icons-vue';
 
 export default {
-  components: {LineChart},
+  computed: {
+    UserFilled() {
+      return UserFilled
+    }
+  },
+  components: {
+    LineChart,
+    UserFilled,
+    Reading
+  },
   data() {
     return {
+      defaultImage: defaultImage,
+      isMobile: false,
       addCashierVisible : false,
-      modifyCashierVisible :false,
-      deleteCashierVisible : false,
+      modifyPasswordVisible :false,
+      modifyUserNameVisible : false,
       priceHistoryVisible : false,
       discountProductListVisible : false,
       searchProduct : '',
       favoriteProductId : '',
       favoriteEmail: '',
       showPriceHistoryProductId : '',
+      passwordMismatch: false,
+      user: {
+        name: 'John Doe',
+        email: 'john.doe@example.com'
+      },
       formItems1 :{
         cashierName :'',
         idNumber : '',
@@ -194,14 +318,14 @@ export default {
         password : '',
         privilege : '',
       },
-      modifyCashierInfo :{
-        cashierId : 0,
-        cashierName :'',
-        idNumber : '',
-        phoneNumber :'',
-        address : '',
-        password : '',
-        privilege : '',
+      modifyPasswordInfo :{
+        oldPassword : '',
+        newPassword : '',
+        newPasswordAgain : ''
+      },
+      modifyUserNameInfo :{
+        newUserName: '',
+        password: '',
       },
       deleteCashierInfo :{
         cashierId : 0,
@@ -240,16 +364,6 @@ export default {
         productId: '',
         email: ''
       },
-
-      cashierList:[{
-        cashierId :0,
-        cashierName : '1',
-        idNumber : '2',
-        phoneNumber : '3',
-        address : '4',
-        privilege :'5',
-        password :'',
-      }],
 
       imageUrlList:[
 
@@ -328,14 +442,76 @@ export default {
           })
     },
 
+    ConfirmModifyPassword(){
+      axios.post("/user/modifyPassword", {
+        email: this.user.email,
+        oldPassword: this.modifyPasswordInfo.oldPassword,
+        newPassword: this.modifyPasswordInfo.newPassword
+      })
+          .then(response => {
+            if(response.data.code === 1){
+              ElMessage.success("修改密码成功");
+              this.modifyPasswordVisible = false;
+              this.modifyPasswordInfo.oldPassword = '';
+              this.modifyPasswordInfo.newPassword = '';
+              this.modifyPasswordInfo.newPasswordAgain = '';
+            }else{
+              ElMessage.error(response.data.message)
+            }
+          })
+          .catch(error => {
+            ElMessage.error("出现故障")
+          })
+    },
+
+    ConfirmModifyUserName(){
+      axios.post("/user/modifyUserName", {
+        email: this.user.email,
+        newName: this.modifyUserNameInfo.newUserName,
+        password: this.modifyUserNameInfo.password
+      })
+          .then(response => {
+            if(response.data.code === 1){
+              ElMessage.success("修改用户名成功");
+              this.user.name = this.modifyUserNameInfo.newUserName;
+              sessionStorage.setItem("userName", this.modifyUserNameInfo.newUserName);
+              this.modifyUserNameVisible = false;
+              this.modifyUserNameInfo.newUserName = '';
+              this.modifyUserNameInfo.password = '';
+            }else{
+              ElMessage.error(response.data.message)
+            }
+          })
+          .catch(error => {
+            ElMessage.error("出现故障")
+          })
+    },
+
+    CheckPasswordMatch() {
+      this.passwordMismatch = this.modifyPasswordInfo.newPassword !== this.modifyPasswordInfo.newPasswordAgain;
+    },
+
     DeleteToken(){
       sessionStorage.clear()
+    }
+  },
+  created() {
+    // console.log(detectDevice())
+    if(detectDevice() == "mobile") {
+      this.isMobile = true;
     }
   },
   beforeDestroy() {
     sessionStorage.setItem('productList', JSON.stringify(this.productList));
   },
   mounted() {
+    if(detectDevice() === "mobile") {
+      this.isMobile = true;
+    }
+    this.user.name = sessionStorage.getItem("userName");
+    this.user.email = sessionStorage.getItem("token");
+    this.$watch('modifyPasswordInfo.newPassword', this.CheckPasswordMatch);
+    this.$watch('modifyPasswordInfo.newPasswordAgain', this.CheckPasswordMatch);
     if(sessionStorage.getItem('discountProductList') != null){
       this.discountProductList = JSON.parse(sessionStorage.getItem('discountProductList'));
       if(this.discountProductList.length > 0){
@@ -372,47 +548,37 @@ export default {
   padding: 0 20px;
 }
 
-.aside {
-  min-height: calc(100vh - 60px);
-  width: 180px;
-  background-color: red;
-}
-
-.title2 {
-  background: url("../assets/figure2.jpg");
-  height: 60px;
+.footer {
+  background-color: #f5f5f5;
+  padding: 10px 20px;
+  text-align: center;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  text-align: left;
-  color: #ffffff;
-  font-weight: bold;
-  font-size: xx-large;
-  font-family: 'Microsoft YaHei';
+  border-top: 1px solid #e0e0e0;
 }
 
-.history-trail {
-  margin-left: 30px;
-  font-size: medium;
-  color: #ffffff;
-  font-weight: normal;
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.footer-button {
+  font-size: 24px;
+  color: #333;
+}
+
+.footer-button:hover {
+  color: #409EFF;
 }
 
 .product_table {
   position: absolute;
-  top: 20%;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  min-height: 100%;
-  height: auto;
-  background-color: #ffffff;
-  overflow-y: hidden;
-}
-
-.add_cashier_button {
-  position: absolute;
-  top: 20%;
+  top: 18%;
   right: 0;
   bottom: 0;
   left: 0;
@@ -436,6 +602,53 @@ export default {
   cursor: pointer; /* 鼠标悬停时显示手形光标 */
   padding: 10px 20px; /* 设置内边距 */
   font-size: 16px; /* 设置字体大小 */
+}
+
+.card-box {
+  width: 300px;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  text-align: center;
+  margin-top: 40px;
+  margin-left: 27.5px;
+  margin-right: 10px;
+  padding: 7.5px;
+  padding-right: 10px;
+  padding-top: 15px;
+}
+
+.inbox-image {
+  width: 240px; /* 设置图片宽度 */
+  height: auto; /* 自适应高度 */
+  margin-right: 10px; /* 图片与文本之间的间距 */
+}
+
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.collect-button, .history-button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.collect-button {
+  background-color: #4CAF50; /* 绿色 */
+  color: white;
+}
+
+.history-button {
+  background-color: #2196F3; /* 蓝色 */
+  color: white;
+}
+
+.avatar-container {
+  display: inline-block;
+  margin-left: 20px;
 }
 
 /* 其他样式可以根据需要添加 */

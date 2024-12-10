@@ -2,7 +2,7 @@
   <div class="main">
 
     <el-container>
-      <el-header class="title">
+      <el-header class="title" v-if="!isMobile">
         <div style="margin-top: 12px; display: inline-block;">
           <span style="font-size: large; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: bold;">Price Comparator</span>
           <span style="margin-left :30px; font-size: medium; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: bold;">用户您好！</span>
@@ -29,6 +29,17 @@
           </el-button>
         </RouterLink>
       </el-header>
+
+      <el-header class="title" v-if="isMobile">
+        <div style="margin-top: 12px; display: inline-block;">
+          <span style="font-size: large; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: bold;">Price Comparator</span>
+          <RouterLink to="/login">
+            <el-button type="primary" style="margin-left: 40px; margin-top: 6px; padding-right: 10px;" @click="DeleteToken">
+              <span style="font-size: medium; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: normal;">登出</span>
+            </el-button>
+          </RouterLink>
+        </div>
+      </el-header>
     </el-container>
     <el-container>
 
@@ -50,8 +61,8 @@
 <!--        </el-menu>-->
 <!--      </el-aside>-->
 
-      <el-main>
-        <el-card title="商品列表" class="product_table" >
+      <el-main v-if="!isMobile">
+        <el-card title="商品列表" class="product_table">
           <el-scrollbar height="600px">
             <el-table :data="productList">
               <el-table-column prop = "" lable = "图片" width="200">
@@ -88,6 +99,47 @@
           </el-scrollbar>
         </el-card>
       </el-main>
+
+      <el-container v-if="isMobile">
+        <el-scrollbar height="600px">
+          <div class="card-box" v-for="product in productList" v-if="isMobile">
+            <div>
+              <img :src="product.imageUrl || defaultImage" alt="图片" class="inbox-image" />
+              <el-divider />
+              <div>
+                <a :href="product.link" target="_blank">{{ product.name }}</a>
+              </div>
+              <div style="margin-left: 10px; text-align: start; font-size: 16px;">
+                <p style="padding: 2.5px;"><span style="font-weight: bold;">价格：</span>{{ product.price }}￥</p>
+                <p style="padding: 2.5px;"><span style="font-weight: bold;">平台：</span>{{ product.platform }}</p>
+              </div>
+            </div>
+            <div class="button-container">
+              <button class="collect-button" @click = "this.favoriteProductId = product.id, deleteFavoriteVisible = true">
+                取消收藏
+              </button>
+              <button class="history-button" @click = "this.showPriceHistoryProductId = product.id, GetProductPriceHistory()">
+                查看历史价格
+              </button>
+            </div>
+          </div>
+        </el-scrollbar>
+      </el-container>
+
+      <el-footer class="footer" v-if="isMobile">
+        <div class="footer-content">
+          <RouterLink to="/user">
+            <el-button type="text" class="footer-button">
+              <el-icon><User /></el-icon>
+            </el-button>
+          </RouterLink>
+          <RouterLink to="/favorites">
+            <el-button type="text" class="footer-button">
+              <el-icon><Star /></el-icon>
+            </el-button>
+          </RouterLink>
+        </div>
+      </el-footer>
     </el-container>
 
     <el-dialog v-model="deleteFavoriteVisible" title="是否取消收藏该商品？取消收藏后，你将不会收到该商品的降价通知！">
@@ -109,7 +161,7 @@
       </div>
     </el-dialog>
 
-    <el-dialog v-model = "discountProductListVisible" title="您收藏的商品降价啦！" :fullscreen="true">
+    <el-dialog v-model = "discountProductListVisible" title="您收藏的商品降价啦！" :fullscreen="true" v-if="!isMobile">
       <el-card title="您收藏的商品降价啦！" class="product_table" >
         <el-scrollbar height="600px">
           <el-table :data="discountProductList">
@@ -143,6 +195,26 @@
       </el-card>
     </el-dialog>
 
+    <el-dialog title="您收藏的商品降价啦！" :fullscreen="true" v-if="isMobile">
+      <el-card title="您收藏的商品降价啦！" class="product_table" >
+        <el-scrollbar height="600px">
+          <div class="card-box" v-for="product in discountProductList" v-if="isMobile">
+            <div>
+              <img :src="product.imageUrl" alt="图片" class="inbox-image" />
+              <el-divider />
+              <div>
+                <a :href="product.link" target="_blank">{{ product.name }}</a>
+              </div>
+              <div style="margin-left: 10px; text-align: start; font-size: 16px;">
+                <p style="padding: 2.5px;"><span style="font-weight: bold;">之前价格：</span> <span style="color: red; font-weight: bold; font-size: large;">{{ product.previousPrice }}￥</span></p>
+                <p style="padding: 2.5px;"><span style="font-weight: bold;">现在价格：</span> <span style="color: red; font-weight: bold; font-size: large;">{{ product.price }}￥</span></p>
+                <p style="padding: 2.5px;"><span style="font-weight: bold;">平台：</span>{{ product.platform }}</p>
+              </div>
+            </div>
+          </div>
+        </el-scrollbar>
+      </el-card>
+    </el-dialog>
   </div>
 </template>
 
@@ -151,12 +223,16 @@ import axios from "axios";
 import {ElMessage} from "element-plus";
 import router from "@/router/index.js";
 import LineChart from "@/components/LineChart.vue";
+import {detectDevice} from "@/device.js";
+import defaultImage from '@/assets/淘宝图标.png'; // 引入默认图片
 //import echarts from "echarts";
 
 export default {
   components: {LineChart},
   data() {
     return {
+      defaultImage: defaultImage,
+      isMobile: false,
       deleteFavoriteVisible: false,
       priceHistoryVisible: false,
       discountProductListVisible : false,
@@ -267,7 +343,15 @@ export default {
           })
     }
   },
+  created() {
+    if(detectDevice() == "mobile") {
+      this.isMobile = true;
+    }
+  },
   mounted() {
+    if(detectDevice() == "mobile") {
+      this.isMobile = true;
+    }
     this.GetFavorites();
     if(sessionStorage.getItem('discountProductList') != null){
       this.discountProductList = JSON.parse(sessionStorage.getItem('discountProductList'));
@@ -314,47 +398,9 @@ export default {
   padding: 0 20px;
 }
 
-.aside {
-  min-height: calc(100vh - 60px);
-  width: 180px;
-  background-color: red;
-}
-
-.title2 {
-  background: url("../assets/figure2.jpg");
-  height: 60px;
-  display: flex;
-  align-items: center;
-  text-align: left;
-  color: #ffffff;
-  font-weight: bold;
-  font-size: xx-large;
-  font-family: 'Microsoft YaHei';
-}
-
-.history-trail {
-  margin-left: 30px;
-  font-size: medium;
-  color: #ffffff;
-  font-weight: normal;
-}
-
 .product_table {
   position: absolute;
   top: 10%;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  min-height: 100%;
-  height: auto;
-  background-color: #ffffff;
-  overflow-y: hidden;
-}
-
-.add_cashier_button {
-  position: absolute;
-  top: 20%;
   right: 0;
   bottom: 0;
   left: 0;
@@ -369,6 +415,76 @@ export default {
   width: 150px; /* 设置图片宽度 */
   height: auto; /* 自适应高度 */
   margin-right: 10px; /* 图片与文本之间的间距 */
+}
+
+.footer {
+  background-color: #f5f5f5;
+  padding: 10px 20px;
+  text-align: center;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #e0e0e0;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.footer-button {
+  font-size: 24px;
+  color: #333;
+}
+
+.footer-button:hover {
+  color: #409EFF;
+}
+
+.card-box {
+  width: 300px;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  text-align: center;
+  margin-top: 40px;
+  margin-left: 27.5px;
+  margin-right: 10px;
+  padding: 7.5px;
+  padding-right: 10px;
+  padding-top: 15px;
+}
+
+.inbox-image {
+  width: 240px; /* 设置图片宽度 */
+  height: auto; /* 自适应高度 */
+  margin-right: 10px; /* 图片与文本之间的间距 */
+}
+
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.collect-button, .history-button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.collect-button {
+  background-color: #4CAF50; /* 绿色 */
+  color: white;
+}
+
+.history-button {
+  background-color: #2196F3; /* 蓝色 */
+  color: white;
 }
 
 /* 其他样式可以根据需要添加 */

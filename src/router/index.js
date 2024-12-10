@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import MyBtnVue from "../components/MyBtn.vue";
 import LoginVue from "@/components/Login.vue";
 import UserVue from "@/components/User.vue";
 import RegisterVue from "@/components/Register.vue";

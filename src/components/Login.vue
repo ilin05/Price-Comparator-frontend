@@ -149,7 +149,8 @@ export default {
           .then(response=>{
             if(response.data.code === 1){
               ElMessage.success("登录成功");
-              sessionStorage.setItem("token", response.data.payload);
+              sessionStorage.setItem("token", response.data.payload.email);
+              sessionStorage.setItem("userName", response.data.payload.userName);
               this.GetDiscountProducts();
               router.push('/user');
             }else{
