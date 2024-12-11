@@ -1,6 +1,5 @@
 <template>
   <div class="main">
-
     <el-container>
       <el-header class="title" v-if="!isMobile">
         <div style="margin-top: 12px; display: inline-block;">
@@ -40,8 +39,6 @@
           </RouterLink>
         </div>
       </el-header>
-    </el-container>
-    <el-container>
 
 <!--      <el-aside class="aside" style="display: flex; color:#0f184d">-->
 <!--        <el-menu active-text-color="#ffd04b" background-color="rgb(17, 71, 117)" default-active="1" text-color="#fff"-->
@@ -130,17 +127,21 @@
         <div class="footer-content">
           <RouterLink to="/user">
             <el-button type="text" class="footer-button">
-              <el-icon><User /></el-icon>
+              <el-icon><Search /></el-icon>
             </el-button>
           </RouterLink>
-          <RouterLink to="/favorites">
+          <el-button type="text" class="footer-button">
+            <el-icon><StarFilled /></el-icon>
+          </el-button>
+          <RouterLink to="/personalInfo">
             <el-button type="text" class="footer-button">
-              <el-icon><Star /></el-icon>
+              <el-icon><UserFilled /></el-icon>
             </el-button>
           </RouterLink>
         </div>
       </el-footer>
     </el-container>
+
 
     <el-dialog v-model="deleteFavoriteVisible" title="是否取消收藏该商品？取消收藏后，你将不会收到该商品的降价通知！">
       <template #footer>
@@ -224,11 +225,12 @@ import {ElMessage} from "element-plus";
 import router from "@/router/index.js";
 import LineChart from "@/components/LineChart.vue";
 import {detectDevice} from "@/device.js";
-import defaultImage from '@/assets/淘宝图标.png'; // 引入默认图片
+import defaultImage from '@/assets/淘宝图标.png';
+import {Search, Star, User, StarFilled, UserFilled} from "@element-plus/icons-vue"; // 引入默认图片
 //import echarts from "echarts";
 
 export default {
-  components: {LineChart},
+  components: {Search, Star, LineChart, User, StarFilled, UserFilled},
   data() {
     return {
       defaultImage: defaultImage,
@@ -344,12 +346,12 @@ export default {
     }
   },
   created() {
-    if(detectDevice() == "mobile") {
+    if(detectDevice() === "mobile") {
       this.isMobile = true;
     }
   },
   mounted() {
-    if(detectDevice() == "mobile") {
+    if(detectDevice() === "mobile") {
       this.isMobile = true;
     }
     this.GetFavorites();

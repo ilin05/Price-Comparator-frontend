@@ -3,6 +3,7 @@ import LoginVue from "@/components/Login.vue";
 import UserVue from "@/components/User.vue";
 import RegisterVue from "@/components/Register.vue";
 import FavoriteVue from "@/components/Favorite.vue";
+import PersonalInfo from "@/components/PersonalInfo.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,7 +27,11 @@ const router = createRouter({
         {
             path: '/favorites',
             component: FavoriteVue
-        }
+        },
+        {
+            path: "/personalInfo",
+            component: PersonalInfo
+        },
     ]
 })
 router.beforeEach((to, from, next)=>{

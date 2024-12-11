@@ -138,7 +138,7 @@
               </div>
             </div>
             <div class="button-container">
-              <button class="collect-button" @click = "this.favoriteProductId = product.id, deleteFavoriteVisible = true">
+              <button class="collect-button" @click = "this.favoriteProductId = product.id, favoriteProduct">
                 收藏商品
               </button>
               <button class="history-button" @click = "this.showPriceHistoryProductId = product.id, GetProductPriceHistory()">
@@ -151,14 +151,17 @@
 
       <el-footer class="footer" v-if="isMobile">
         <div class="footer-content">
-          <RouterLink to="/user">
-            <el-button type="text" class="footer-button">
-              <el-icon><User /></el-icon>
-            </el-button>
-          </RouterLink>
+          <el-button type="text" class="footer-button">
+            <el-icon><Search /></el-icon>
+          </el-button>
           <RouterLink to="/favorites">
             <el-button type="text" class="footer-button">
               <el-icon><Star /></el-icon>
+            </el-button>
+          </RouterLink>
+          <RouterLink to="/personalInfo">
+            <el-button type="text" class="footer-button">
+              <el-icon><User /></el-icon>
             </el-button>
           </RouterLink>
         </div>
@@ -279,7 +282,7 @@ import router from "@/router/index.js";
 import LineChart from "@/components/LineChart.vue";
 import {detectDevice} from "@/device.js";
 import defaultImage from '@/assets/淘宝图标.png'; // 引入默认图片
-import { UserFilled, Reading } from '@element-plus/icons-vue';
+import { UserFilled, Star, Reading } from '@element-plus/icons-vue';
 
 export default {
   computed: {
@@ -290,7 +293,8 @@ export default {
   components: {
     LineChart,
     UserFilled,
-    Reading
+    Reading,
+    Star
   },
   data() {
     return {
