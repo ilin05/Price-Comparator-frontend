@@ -38,6 +38,11 @@
             <el-icon><Star /></el-icon>
           </el-button>
         </RouterLink>
+        <RouterLink to="/myFootPrints">
+          <el-button type="text" class="footer-button">
+            <el-icon><Clock /></el-icon>
+          </el-button>
+        </RouterLink>
         <el-button type="text" class="footer-button">
           <el-icon><UserFilled /></el-icon>
         </el-button>

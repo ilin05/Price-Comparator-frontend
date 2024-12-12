@@ -4,6 +4,7 @@ import UserVue from "@/components/User.vue";
 import RegisterVue from "@/components/Register.vue";
 import FavoriteVue from "@/components/Favorite.vue";
 import PersonalInfo from "@/components/PersonalInfo.vue";
+import MyFootprints from "@/components/MyFootprints.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,6 +33,10 @@ const router = createRouter({
             path: "/personalInfo",
             component: PersonalInfo
         },
+        {
+            path: "/myFootprints",
+            component: MyFootprints
+        }
     ]
 })
 router.beforeEach((to, from, next)=>{

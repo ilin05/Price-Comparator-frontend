@@ -66,31 +66,20 @@
         </div>
       </el-header>
 
-      <div v-if="!isMobile" style="width:30%;margin:0 auto; padding-top:3vh;">
-        <el-input v-model="this.searchProduct" placeholder="输入要查询的商品">
-          <template #append>
-            <el-button type="primary" @click="SearchProduct">查询</el-button>
-          </template>
-        </el-input>
+<!--      一级分类：categories-->
+      <div class="m-4">
+        <p>选择商品类别</p>
+        <el-cascader :options="options" :props="props1" clearable @change="filterProducts" />
       </div>
-
-      <div v-if="isMobile" style="width:50%;margin:0 auto; padding-top:2vh;">
-        <el-input v-model="this.searchProduct" placeholder="输入要查询的商品">
-          <template #append>
-            <el-button type="primary" @click="SearchProduct">查询</el-button>
-          </template>
-        </el-input>
-      </div>
-
 
       <el-container v-if="!isMobile">
         <el-card title="商品列表" class="product_table">
           <el-scrollbar height="600px">
-            <el-table :data="productList">
+            <el-table :data="filteredProductList">
               <el-table-column prop = "" lable = "图片" width="200">
                 <template v-slot="scope">
                   <img :src="scope.row.imageUrl || defaultImage" alt="图片" class="left-image" />
-<!--                  <el-image preview-teleported :preview-src-list="imageUrlList"/>-->
+                  <!--                  <el-image preview-teleported :preview-src-list="imageUrlList"/>-->
                 </template>
               </el-table-column>
               <el-table-column prop="name" label="描述">
@@ -109,10 +98,10 @@
                 <template v-slot ="scope">
                   <el-button type="normal" @click = "this.favoriteProductId = scope.row.id, favoriteProduct()">
                     收藏</el-button>
-<!--                  <el-button type="danger" v-model="deleteCashierVisible" @click = "this.deleteCashierInfo.cashierId = scope.row.cashierId, this.deleteCashierInfo.cashierName = scope.row.cashierName,-->
-<!--        this.deleteCashierInfo.idNumber = scope.row.idNumber, this.deleteCashierInfo.phoneNumber = scope.row.phoneNumber, this.deleteCashierInfo.address = scope.row.address,-->
-<!--        this.deleteCashierInfo.privilege = scope.row.privilege,-->
-<!--        deleteCashierVisible = true">删除</el-button>-->
+                  <!--                  <el-button type="danger" v-model="deleteCashierVisible" @click = "this.deleteCashierInfo.cashierId = scope.row.cashierId, this.deleteCashierInfo.cashierName = scope.row.cashierName,-->
+                  <!--        this.deleteCashierInfo.idNumber = scope.row.idNumber, this.deleteCashierInfo.phoneNumber = scope.row.phoneNumber, this.deleteCashierInfo.address = scope.row.address,-->
+                  <!--        this.deleteCashierInfo.privilege = scope.row.privilege,-->
+                  <!--        deleteCashierVisible = true">删除</el-button>-->
                 </template>
               </el-table-column>
               <el-table-column label="点击查看价格历史">
@@ -128,7 +117,7 @@
 
       <el-container v-if="isMobile">
         <el-scrollbar height="600px">
-          <div class="card-box" v-for="product in productList" v-if="isMobile">
+          <div class="card-box" v-for="product in filteredProductList" v-if="isMobile">
             <div>
               <img :src="product.imageUrl || defaultImage" alt="图片" class="inbox-image" />
               <el-divider />
@@ -141,8 +130,8 @@
               </div>
             </div>
             <div class="button-container">
-              <button class="collect-button" @click = "this.favoriteProductId = product.id, favoriteProduct">
-                收藏商品
+              <button class="collect-button" @click = "this.favoriteProductId = product.id, deleteFavoriteVisible = true">
+                取消收藏
               </button>
               <button class="history-button" @click = "this.showPriceHistoryProductId = product.id, GetProductPriceHistory()">
                 查看历史价格
@@ -154,27 +143,26 @@
 
       <el-footer class="footer" v-if="isMobile">
         <div class="footer-content">
-          <el-button type="text" class="footer-button">
-            <el-icon><Search /></el-icon>
-          </el-button>
+          <RouterLink to="/user">
+            <el-button type="text" class="footer-button">
+              <el-icon><Search /></el-icon>
+            </el-button>
+          </RouterLink>
           <RouterLink to="/favorites">
             <el-button type="text" class="footer-button">
-              <el-icon><Star /></el-icon>
+              <el-icon><StarFilled /></el-icon>
             </el-button>
           </RouterLink>
-          <RouterLink to="/myFootPrints">
-            <el-button type="text" class="footer-button">
-              <el-icon><Clock /></el-icon>
-            </el-button>
-          </RouterLink>
+          <el-button type="text" class="footer-button">
+            <el-icon><Clock /></el-icon>
+          </el-button>
           <RouterLink to="/personalInfo">
             <el-button type="text" class="footer-button">
-              <el-icon><User /></el-icon>
+              <el-icon><UserFilled /></el-icon>
             </el-button>
           </RouterLink>
         </div>
       </el-footer>
-
     </el-container>
 
     <el-dialog v-model = "priceHistoryVisible" title="价格历史">
@@ -185,7 +173,7 @@
       </div>
     </el-dialog>
 
-    <el-dialog v-model = "discountProductListVisible" title="您收藏的商品降价啦！" :fullscreen="true" v-if="!isMobile">
+    <el-dialog v-model = "discountProductListVisible" title="您收藏的商品降价啦！" :fullscreen="true">
       <el-card title="您收藏的商品降价啦！" class="product_table" >
         <el-scrollbar height="600px">
           <el-table :data="discountProductList">
@@ -215,27 +203,6 @@
             <el-table-column prop="platform" label="平台">
             </el-table-column>
           </el-table>
-        </el-scrollbar>
-      </el-card>
-    </el-dialog>
-
-    <el-dialog title="您收藏的商品降价啦！" :fullscreen="true" v-if="isMobile">
-      <el-card title="您收藏的商品降价啦！" class="product_table" >
-        <el-scrollbar height="600px">
-          <div class="card-box" v-for="product in discountProductList" v-if="isMobile">
-            <div>
-              <img :src="product.imageUrl" alt="图片" class="inbox-image" />
-              <el-divider />
-              <div>
-                <a :href="product.link" target="_blank">{{ product.name }}</a>
-              </div>
-              <div style="margin-left: 10px; text-align: start; font-size: 16px;">
-                <p style="padding: 2.5px;"><span style="font-weight: bold;">之前价格：</span> <span style="color: red; font-weight: bold; font-size: large;">{{ product.previousPrice }}￥</span></p>
-                <p style="padding: 2.5px;"><span style="font-weight: bold;">现在价格：</span> <span style="color: red; font-weight: bold; font-size: large;">{{ product.price }}￥</span></p>
-                <p style="padding: 2.5px;"><span style="font-weight: bold;">平台：</span>{{ product.platform }}</p>
-              </div>
-            </div>
-          </div>
         </el-scrollbar>
       </el-card>
     </el-dialog>
@@ -290,7 +257,202 @@ import router from "@/router/index.js";
 import LineChart from "@/components/LineChart.vue";
 import {detectDevice} from "@/device.js";
 import defaultImage from '@/assets/淘宝图标.png'; // 引入默认图片
-import { UserFilled, Star, Reading } from '@element-plus/icons-vue';
+import {UserFilled, Star, Reading, Clock} from '@element-plus/icons-vue';
+const props = {
+  checkStrictly: true,
+}
+const options = [
+  {
+    value: '服装与配饰',
+    label: '服装与配饰',
+    children: [
+      {
+        value: '男装',
+        label: '男装'
+      },
+      {
+        value: '女装',
+        label: '女装'
+      },
+      {
+        value: '配饰',
+        label: '配饰'
+      }
+    ]
+  },
+  {
+    value: '电子产品',
+    label: '电子产品',
+    children: [
+      {
+        value: '手机与配件',
+        label: '手机与配件'
+      },
+      {
+        value: '电脑与配件',
+        label: '电脑与配件'
+      },
+      {
+        value: '家用电器',
+        label: '家用电器'
+      },
+      {
+        value: '摄影与摄像',
+        label: '摄影与摄像'
+      }
+    ]
+  },
+  {
+    value: '家居与生活',
+    label: '家居与生活',
+    children: [
+      {
+        value: '家具',
+        label: '家具'
+      },
+      {
+        value: '家纺',
+        label: '家纺'
+      },
+      {
+        value: '厨房用品',
+        label: '厨房用品'
+      },
+      {
+        value: '清洁用品',
+        label: '清洁用品'
+      }
+    ]
+  },
+  {
+    value: '美妆与个人护理',
+    label: '美妆与个人护理',
+    children: [
+      {
+        value: '护肤品',
+        label: '护肤品'
+      },
+      {
+        value: '彩妆',
+        label: '彩妆'
+      },
+      {
+        value: '个人护理',
+        label: '个人护理'
+      }
+    ]
+  },
+  {
+    value: '食品与饮料',
+    label: '食品与饮料',
+    children: [
+      {
+        value: '零食',
+        label: '零食'
+      },
+      {
+        value: '饮料',
+        label: '饮料'
+      },
+      {
+        value: '生鲜食品',
+        label: '生鲜食品'
+      }
+    ]
+  },
+  {
+    value: '运动与户外',
+    label: '运动与户外',
+    children: [
+      {
+        value: '运动服装',
+        label: '运动服装'
+      },
+      {
+        value: '健身器材',
+        label: '健身器材'
+      },
+      {
+        value: '户外装备',
+        label: '户外装备'
+      }
+    ]
+  },
+  {
+    value: '母婴用品',
+    label: '母婴用品',
+    children: [
+      {
+        value: '婴儿服装',
+        label: '婴儿服装'
+      },
+      {
+        value: '婴儿用品',
+        label: '婴儿用品'
+      },
+      {
+        value: '孕妇用品',
+        label: '孕妇用品'
+      }
+    ]
+  },
+  {
+    value: '图书与文具',
+    label: '图书与文具',
+    children: [
+      {
+        value: '图书',
+        label: '图书'
+      },
+      {
+        value: '文具',
+        label: '文具'
+      }
+    ]
+  },
+  {
+    value: '汽车与配件',
+    label: '汽车与配件',
+    children: [
+      {
+        value: '汽车',
+        label: '汽车'
+      },
+      {
+        value: '汽车配件',
+        label: '汽车配件'
+      }
+    ]
+  },
+  {
+    value: '宠物用品',
+    label: '宠物用品',
+    children: [
+      {
+        value: '宠物食品',
+        label: '宠物食品'
+      },
+      {
+        value: '宠物用品',
+        label: '宠物用品'
+      }
+    ]
+  },
+  {
+    value: '礼品与定制',
+    label: '礼品与定制',
+    children: [
+      {
+        value: '礼品',
+        label: '礼品'
+      },
+      {
+        value: '定制产品',
+        label: '定制产品'
+      }
+    ]
+  }
+]
 
 export default {
   computed: {
@@ -299,6 +461,7 @@ export default {
     }
   },
   components: {
+    Clock,
     LineChart,
     UserFilled,
     Reading,
@@ -306,6 +469,9 @@ export default {
   },
   data() {
     return {
+      filteredProductList: [], // Add this line
+      props1: props,
+      options: options,
       defaultImage: defaultImage,
       isMobile: false,
       modifyPasswordVisible :false,
@@ -369,11 +535,25 @@ export default {
 
       dates:[
 
-      ]
-
+      ],
     };
   },
   methods: {
+    getAllProducts(){
+      axios.get("/user/getAllProducts")
+          .then(response => {
+            if(response.data.code === 1){
+              this.productList = response.data.payload;
+              this.filteredProductList = this.productList;
+            }else{
+              ElMessage.error(response.data.message)
+            }
+          })
+          .catch(error => {
+            ElMessage.error("出现故障")
+          })
+    },
+
     favoriteProduct(){
       console.log(this.favoriteProductId)
       console.log(sessionStorage.getItem("token"))
@@ -391,28 +571,6 @@ export default {
           })
           .catch(error => {
             ElMessage.error("出现故障")
-          })
-    },
-
-    SearchProduct(){
-      ElMessage.success("正在搜索商品，这可能会花费一分钟左右的时间，请耐心等待~");
-      this.productList = [];
-      sessionStorage.removeItem('productList');
-      axios.get("/user/searchProducts", {
-        params: {
-          productName: this.searchProduct
-        }
-      })
-          .then(response => {
-            //console.log(response.data)
-            if (response.data.code === 1) {
-              this.productList = response.data.payload;
-              sessionStorage.setItem('productList', JSON.stringify(this.productList));
-              ElMessage.success("搜索完毕，共找到" + this.productList.length + "个商品");
-            }
-          })
-          .catch(error => {
-            ElMessage.error("数据获取错误，请联系开发人员");
           })
     },
 
@@ -487,16 +645,26 @@ export default {
 
     DeleteToken(){
       sessionStorage.clear()
+    },
+
+    filterProducts(selected) {
+      if (selected.length === 1) {
+        this.filteredProductList = this.productList.filter(product => product.category.includes(selected[0]));
+      } else if (selected.length === 2) {
+        const selectedCategory = `${selected[0]}-${selected[1]}`;
+        console.log(selectedCategory);
+        this.filteredProductList = this.productList.filter(product => product.category.includes(selectedCategory));
+      } else {
+        this.filteredProductList = this.productList;
+      }
     }
   },
   created() {
-    // console.log(detectDevice())
-    if(detectDevice() == "mobile") {
+    this.getAllProducts()
+    if(detectDevice() === "mobile") {
       this.isMobile = true;
     }
-  },
-  beforeDestroy() {
-    sessionStorage.setItem('productList', JSON.stringify(this.productList));
+    // console.log(detectDevice())
   },
   mounted() {
     if(detectDevice() === "mobile") {
@@ -513,7 +681,7 @@ export default {
       }
       sessionStorage.removeItem('discountProductList');
     }
-    this.productList = JSON.parse(sessionStorage.getItem('productList'));
+    this.getAllProducts();
   }
 }
 </script>

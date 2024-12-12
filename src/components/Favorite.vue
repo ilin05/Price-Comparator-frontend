@@ -19,7 +19,15 @@
             </button>
           </RouterLink>
           <el-icon style="color: #ffffff; margin-left: 5px">
-            <UserFilled />
+            <Star />
+          </el-icon>
+          <RouterLink to="/myFootprints">
+            <button class="transparent-button">
+              <span style="margin-left: 40px; font-size: medium; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: lighter">我的足迹</span>
+            </button>
+          </RouterLink>
+          <el-icon style="color: #ffffff; margin-left: 5px">
+            <Clock />
           </el-icon>
         </div >
         <RouterLink to="/login">
@@ -133,6 +141,11 @@
           <el-button type="text" class="footer-button">
             <el-icon><StarFilled /></el-icon>
           </el-button>
+          <RouterLink to="/myFootPrints">
+            <el-button type="text" class="footer-button">
+              <el-icon><Clock /></el-icon>
+            </el-button>
+          </RouterLink>
           <RouterLink to="/personalInfo">
             <el-button type="text" class="footer-button">
               <el-icon><UserFilled /></el-icon>
