@@ -86,7 +86,7 @@
       <el-container v-if="!isMobile">
         <el-card title="商品列表" class="product_table">
           <el-scrollbar height="600px">
-            <el-table :data="productList">
+            <el-table :data="filteredProductList">
               <el-table-column prop = "" lable = "图片" width="200">
                 <template v-slot="scope">
                   <img :src="scope.row.imageUrl || defaultImage" alt="图片" class="left-image" />
@@ -99,11 +99,29 @@
                 </template>
               </el-table-column>
               <el-table-column prop="price" label="价格">
+                <template v-slot:header>
+                  <span>价格</span>
+                  <el-icon @click="sortPriceAsc" style="cursor: pointer; margin-left: 5px;">
+                    <ArrowUp />
+                  </el-icon>
+                  <el-icon @click="sortPriceDesc" style="cursor: pointer; margin-left: 5px;">
+                    <ArrowDown />
+                  </el-icon>
+                </template>
                 <template v-slot="scope">
                   {{ scope.row.price }}￥
                 </template>
               </el-table-column>
-              <el-table-column prop="platform" label="平台">
+              <el-table-column label="平台">
+                <template v-slot:header>
+                  <span>平台</span>
+                  <el-select v-model="selectedPlatform" placeholder="筛选" @change="filterByPlatform" style="margin-left: 10px; width: 100px;">
+                    <el-option v-for="platform in platforms" :key="platform.value" :label="platform.label" :value="platform.value"></el-option>
+                  </el-select>
+                </template>
+                <template v-slot="scope">
+                  {{ scope.row.platform }}
+                </template>
               </el-table-column>
               <el-table-column  label="点击收藏该商品">
                 <template v-slot ="scope">
@@ -291,7 +309,24 @@ import LineChart from "@/components/LineChart.vue";
 import {detectDevice} from "@/device.js";
 import defaultImage from '@/assets/淘宝图标.png'; // 引入默认图片
 import { UserFilled, Star, Reading } from '@element-plus/icons-vue';
-
+const platforms=[
+  {
+    value: '淘宝',
+    label: '淘宝'
+  },
+  {
+    value: '苏宁易购',
+    label: '苏宁易购'
+  },
+  {
+    value: '唯品会',
+    label: '唯品会'
+  },
+  {
+    value: '小米有品',
+    label: '小米有品'
+  }
+]
 export default {
   computed: {
     UserFilled() {
@@ -306,6 +341,8 @@ export default {
   },
   data() {
     return {
+      platforms: platforms,
+      filteredProductList: [],
       defaultImage: defaultImage,
       isMobile: false,
       modifyPasswordVisible :false,
@@ -317,6 +354,7 @@ export default {
       favoriteEmail: '',
       showPriceHistoryProductId : '',
       passwordMismatch: false,
+      selectedPlatform: '',
       user: {
         name: 'John Doe',
         email: 'john.doe@example.com'
@@ -383,7 +421,7 @@ export default {
         email: this.favoriteEmail
       })
           .then(response => {
-            if(response.data.code == 1){
+            if(response.data.code === 1){
               ElMessage.success("收藏成功")
             }else{
               ElMessage.error(response.data.message)
@@ -407,6 +445,7 @@ export default {
             //console.log(response.data)
             if (response.data.code === 1) {
               this.productList = response.data.payload;
+              this.filteredProductList = this.productList;
               sessionStorage.setItem('productList', JSON.stringify(this.productList));
               ElMessage.success("搜索完毕，共找到" + this.productList.length + "个商品");
             }
@@ -487,11 +526,26 @@ export default {
 
     DeleteToken(){
       sessionStorage.clear()
+    },
+
+    filterByPlatform() {
+      if (this.selectedPlatform) {
+        this.filteredProductList = this.productList.filter(product => product.platform === this.selectedPlatform);
+      } else {
+        this.filteredProductList = this.productList;
+      }
+    },
+
+    sortPriceAsc() {
+      this.filteredProductList.sort((a, b) => a.price - b.price);
+    },
+    sortPriceDesc() {
+      this.filteredProductList.sort((a, b) => b.price - a.price);
     }
   },
   created() {
     // console.log(detectDevice())
-    if(detectDevice() == "mobile") {
+    if(detectDevice() === "mobile") {
       this.isMobile = true;
     }
   },
@@ -514,6 +568,7 @@ export default {
       sessionStorage.removeItem('discountProductList');
     }
     this.productList = JSON.parse(sessionStorage.getItem('productList'));
+    this.filteredProductList = this.productList;
   }
 }
 </script>

@@ -48,6 +48,11 @@
         </div>
       </el-header>
 
+      <div class="m-4" style="margin-left: 20px;">
+        <p>选择商品类别</p>
+        <el-cascader :options="options" :props="props1" clearable @change="filterProducts" />
+      </div>
+
 <!--      <el-aside class="aside" style="display: flex; color:#0f184d">-->
 <!--        <el-menu active-text-color="#ffd04b" background-color="rgb(17, 71, 117)" default-active="1" text-color="#fff"-->
 <!--                 style="height:100%; width: 100%;" :router="true">-->
@@ -69,10 +74,10 @@
       <el-main v-if="!isMobile">
         <el-card title="商品列表" class="product_table">
           <el-scrollbar height="600px">
-            <el-table :data="productList">
+            <el-table :data="filteredProductList">
               <el-table-column prop = "" lable = "图片" width="200">
                 <template v-slot="scope">
-                  <img :src="scope.row.imageUrl" alt="图片" class="left-image" />
+                  <img :src="scope.row.imageUrl || defaultImage" alt="图片" class="left-image" />
                   <!--                  <el-image preview-teleported :preview-src-list="imageUrlList"/>-->
                 </template>
               </el-table-column>
@@ -82,23 +87,45 @@
                 </template>
               </el-table-column>
               <el-table-column prop="price" label="价格">
+                <template v-slot:header>
+                  <span>价格</span>
+                  <el-icon @click="sortPriceAsc" style="cursor: pointer; margin-left: 5px;">
+                    <ArrowUp />
+                  </el-icon>
+                  <el-icon @click="sortPriceDesc" style="cursor: pointer; margin-left: 5px;">
+                    <ArrowDown />
+                  </el-icon>
+                </template>
                 <template v-slot="scope">
                   {{ scope.row.price }}￥
                 </template>
               </el-table-column>
-              <el-table-column prop="platform" label="平台">
+              <el-table-column label="平台">
+                <template v-slot:header>
+                  <span>平台</span>
+                  <el-select v-model="selectedPlatform" placeholder="筛选" @change="filterByPlatform" style="margin-left: 10px; width: 100px;">
+                    <el-option v-for="platform in platforms" :key="platform.value" :label="platform.label" :value="platform.value"></el-option>
+                  </el-select>
+                </template>
+                <template v-slot="scope">
+                  {{ scope.row.platform }}
+                </template>
               </el-table-column>
-              <el-table-column  label="点击取消收藏该商品">
+              <el-table-column  label="点击收藏该商品">
                 <template v-slot ="scope">
-                  <el-button type="normal" @click = "this.favoriteProductId = scope.row.id, deleteFavoriteVisible = true">
-                    取消收藏</el-button>
+                  <el-button type="normal" @click = "this.favoriteProductId = scope.row.id, favoriteProduct()">
+                    收藏</el-button>
+                  <!--                  <el-button type="danger" v-model="deleteCashierVisible" @click = "this.deleteCashierInfo.cashierId = scope.row.cashierId, this.deleteCashierInfo.cashierName = scope.row.cashierName,-->
+                  <!--        this.deleteCashierInfo.idNumber = scope.row.idNumber, this.deleteCashierInfo.phoneNumber = scope.row.phoneNumber, this.deleteCashierInfo.address = scope.row.address,-->
+                  <!--        this.deleteCashierInfo.privilege = scope.row.privilege,-->
+                  <!--        deleteCashierVisible = true">删除</el-button>-->
                 </template>
               </el-table-column>
               <el-table-column label="点击查看价格历史">
-              <template v-slot ="scope">
-                <el-button type="normal" @click = "this.showPriceHistoryProductId = scope.row.id, GetProductPriceHistory()">
-                  查看</el-button>
-              </template>
+                <template v-slot ="scope">
+                  <el-button type="normal" @click = "this.showPriceHistoryProductId = scope.row.id, GetProductPriceHistory()">
+                    查看</el-button>
+                </template>
               </el-table-column>
             </el-table>
           </el-scrollbar>
@@ -107,7 +134,7 @@
 
       <el-container v-if="isMobile">
         <el-scrollbar height="600px">
-          <div class="card-box" v-for="product in productList" v-if="isMobile">
+          <div class="card-box" v-for="product in filteredProductList" v-if="isMobile">
             <div>
               <img :src="product.imageUrl || defaultImage" alt="图片" class="inbox-image" />
               <el-divider />
@@ -241,11 +268,227 @@ import {detectDevice} from "@/device.js";
 import defaultImage from '@/assets/淘宝图标.png';
 import {Search, Star, User, StarFilled, UserFilled} from "@element-plus/icons-vue"; // 引入默认图片
 //import echarts from "echarts";
-
+const platforms=[
+  {
+    value: '淘宝',
+    label: '淘宝'
+  },
+  {
+    value: '苏宁易购',
+    label: '苏宁易购'
+  },
+  {
+    value: '唯品会',
+    label: '唯品会'
+  },
+  {
+    value: '小米有品',
+    label: '小米有品'
+  }
+]
+const props = {
+  checkStrictly: true,
+}
+const options = [
+  {
+    value: '服装与配饰',
+    label: '服装与配饰',
+    children: [
+      {
+        value: '男装',
+        label: '男装'
+      },
+      {
+        value: '女装',
+        label: '女装'
+      },
+      {
+        value: '配饰',
+        label: '配饰'
+      }
+    ]
+  },
+  {
+    value: '电子产品',
+    label: '电子产品',
+    children: [
+      {
+        value: '手机与配件',
+        label: '手机与配件'
+      },
+      {
+        value: '电脑与配件',
+        label: '电脑与配件'
+      },
+      {
+        value: '家用电器',
+        label: '家用电器'
+      },
+      {
+        value: '摄影与摄像',
+        label: '摄影与摄像'
+      }
+    ]
+  },
+  {
+    value: '家居与生活',
+    label: '家居与生活',
+    children: [
+      {
+        value: '家具',
+        label: '家具'
+      },
+      {
+        value: '家纺',
+        label: '家纺'
+      },
+      {
+        value: '厨房用品',
+        label: '厨房用品'
+      },
+      {
+        value: '清洁用品',
+        label: '清洁用品'
+      }
+    ]
+  },
+  {
+    value: '美妆与个人护理',
+    label: '美妆与个人护理',
+    children: [
+      {
+        value: '护肤品',
+        label: '护肤品'
+      },
+      {
+        value: '彩妆',
+        label: '彩妆'
+      },
+      {
+        value: '个人护理',
+        label: '个人护理'
+      }
+    ]
+  },
+  {
+    value: '食品与饮料',
+    label: '食品与饮料',
+    children: [
+      {
+        value: '零食',
+        label: '零食'
+      },
+      {
+        value: '饮料',
+        label: '饮料'
+      },
+      {
+        value: '生鲜食品',
+        label: '生鲜食品'
+      }
+    ]
+  },
+  {
+    value: '运动与户外',
+    label: '运动与户外',
+    children: [
+      {
+        value: '运动服装',
+        label: '运动服装'
+      },
+      {
+        value: '健身器材',
+        label: '健身器材'
+      },
+      {
+        value: '户外装备',
+        label: '户外装备'
+      }
+    ]
+  },
+  {
+    value: '母婴用品',
+    label: '母婴用品',
+    children: [
+      {
+        value: '婴儿服装',
+        label: '婴儿服装'
+      },
+      {
+        value: '婴儿用品',
+        label: '婴儿用品'
+      },
+      {
+        value: '孕妇用品',
+        label: '孕妇用品'
+      }
+    ]
+  },
+  {
+    value: '图书与文具',
+    label: '图书与文具',
+    children: [
+      {
+        value: '图书',
+        label: '图书'
+      },
+      {
+        value: '文具',
+        label: '文具'
+      }
+    ]
+  },
+  {
+    value: '汽车与配件',
+    label: '汽车与配件',
+    children: [
+      {
+        value: '汽车',
+        label: '汽车'
+      },
+      {
+        value: '汽车配件',
+        label: '汽车配件'
+      }
+    ]
+  },
+  {
+    value: '宠物用品',
+    label: '宠物用品',
+    children: [
+      {
+        value: '宠物食品',
+        label: '宠物食品'
+      },
+      {
+        value: '宠物用品',
+        label: '宠物用品'
+      }
+    ]
+  },
+  {
+    value: '礼品与定制',
+    label: '礼品与定制',
+    children: [
+      {
+        value: '礼品',
+        label: '礼品'
+      },
+      {
+        value: '定制产品',
+        label: '定制产品'
+      }
+    ]
+  }
+]
 export default {
   components: {Search, Star, LineChart, User, StarFilled, UserFilled},
   data() {
     return {
+      props1: props,
+      options: options,
+      platforms: platforms,
+      filteredProductList: [],
       defaultImage: defaultImage,
       isMobile: false,
       deleteFavoriteVisible: false,
@@ -329,6 +572,7 @@ export default {
       })
           .then(response => {
             this.productList = response.data.payload;
+            this.filteredProductList = this.productList;
           })
           .catch(error => {
             ElMessage.error("数据获取错误，请联系开发人员");
@@ -356,6 +600,31 @@ export default {
           .catch(error => {
             ElMessage.error("出现故障")
           })
+    },
+    filterProducts(selected) {
+      if (selected.length === 1) {
+        this.filteredProductList = this.productList.filter(product => product.category.includes(selected[0]));
+      } else if (selected.length === 2) {
+        const selectedCategory = `${selected[0]}-${selected[1]}`;
+        console.log(selectedCategory);
+        this.filteredProductList = this.productList.filter(product => product.category.includes(selectedCategory));
+      } else {
+        this.filteredProductList = this.productList;
+      }
+    },
+    filterByPlatform() {
+      if (this.selectedPlatform) {
+        this.filteredProductList = this.productList.filter(product => product.platform === this.selectedPlatform);
+      } else {
+        this.filteredProductList = this.productList;
+      }
+    },
+
+    sortPriceAsc() {
+      this.filteredProductList.sort((a, b) => a.price - b.price);
+    },
+    sortPriceDesc() {
+      this.filteredProductList.sort((a, b) => b.price - a.price);
     }
   },
   created() {
@@ -375,7 +644,7 @@ export default {
       }
       sessionStorage.removeItem('discountProductList');
     }
-    this.productList = JSON.parse(sessionStorage.getItem('productList'));
+    // this.productList = JSON.parse(sessionStorage.getItem('productList'));
   }
 }
 </script>
@@ -415,7 +684,7 @@ export default {
 
 .product_table {
   position: absolute;
-  top: 10%;
+  top: 20%;
   right: 0;
   bottom: 0;
   left: 0;
