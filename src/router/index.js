@@ -5,6 +5,7 @@ import RegisterVue from "@/components/Register.vue";
 import FavoriteVue from "@/components/Favorite.vue";
 import PersonalInfo from "@/components/PersonalInfo.vue";
 import MyFootprints from "@/components/MyFootprints.vue";
+import {ElMessage} from "element-plus";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -41,6 +42,7 @@ const router = createRouter({
 })
 router.beforeEach((to, from, next)=>{
     if(!sessionStorage.getItem("token") && (to.path !== '/login' && to.path !== '/register')){
+        ElMessage.error("请先登录")
         next({path: '/login'})
     } else {
         next()

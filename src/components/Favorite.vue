@@ -4,7 +4,7 @@
       <el-header class="title" v-if="!isMobile">
         <div style="margin-top: 12px; display: inline-block;">
           <span style="font-size: large; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: bold;">Price Comparator</span>
-          <span style="margin-left :30px; font-size: medium; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: bold;">用户您好！</span>
+          <span style="margin-left :30px; font-size: medium; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: bold;">用户 {{this.user.name}} 您好！</span>
           <RouterLink to="/user">
             <button class="transparent-button">
               <span style="margin-left: 40px; font-size: medium; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: lighter">搜索商品</span>
@@ -30,11 +30,28 @@
             <Clock />
           </el-icon>
         </div >
-        <RouterLink to="/login">
-          <el-button type="primary" style="margin-top: 12px; padding-right: 10px;">
-            <span style="font-size: medium; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: normal;">登出</span>
-          </el-button>
-        </RouterLink>
+        <div class="avatar-container">
+          <el-popover
+              ref="popover"
+              placement="bottom"
+              :width="300"
+              trigger="hover"
+          >
+            <template #reference>
+              <el-avatar :icon="UserFilled" />
+            </template>
+            <p>我的信息</p>
+            <p><strong>用户名:</strong> {{ this.user.name }}</p>
+            <p><strong>邮箱:</strong> {{ this.user.email }}</p>
+            <div style="text-align: right; margin: 0">
+              <el-button size="small" text @click="modifyPasswordVisible = true">修改密码</el-button>
+              <el-button size="small" text @click="modifyUserNameVisible = true">修改用户名</el-button>
+              <RouterLink to="/login">
+                <el-button size="small" type="primary" style="margin-left: 12px" @click="DeleteToken">登出</el-button>
+              </RouterLink>
+            </div>
+          </el-popover>
+        </div>
       </el-header>
 
       <el-header class="title" v-if="isMobile">
@@ -111,10 +128,10 @@
                   {{ scope.row.platform }}
                 </template>
               </el-table-column>
-              <el-table-column  label="点击收藏该商品">
+              <el-table-column  label="点击取消收藏该商品">
                 <template v-slot ="scope">
-                  <el-button type="normal" @click = "this.favoriteProductId = scope.row.id, favoriteProduct()">
-                    收藏</el-button>
+                  <el-button type="danger" @click = "this.favoriteProductId = scope.row.id, this.deleteFavoriteVisible = true">
+                    取消收藏</el-button>
                   <!--                  <el-button type="danger" v-model="deleteCashierVisible" @click = "this.deleteCashierInfo.cashierId = scope.row.cashierId, this.deleteCashierInfo.cashierName = scope.row.cashierName,-->
                   <!--        this.deleteCashierInfo.idNumber = scope.row.idNumber, this.deleteCashierInfo.phoneNumber = scope.row.phoneNumber, this.deleteCashierInfo.address = scope.row.address,-->
                   <!--        this.deleteCashierInfo.privilege = scope.row.privilege,-->
@@ -255,6 +272,47 @@
           </div>
         </el-scrollbar>
       </el-card>
+    </el-dialog>
+
+    <el-dialog v-model="modifyPasswordVisible" title="修改密码">
+      <el-form
+          :label-position="left"
+          label-width="auto"
+          style="max-width: 600px"
+      >
+        <el-form-item label="旧密码">
+          <el-input type="password" v-model="modifyPasswordInfo.oldPassword" placeholder="请输入旧密码"/>
+        </el-form-item>
+        <el-form-item label="新密码">
+          <el-input type="password" v-model="modifyPasswordInfo.newPassword" placeholder="请输入新密码" required minlength="6"/>
+        </el-form-item>
+        <el-form-item label="再次输入新密码" :error="passwordMismatch ? '两次输入的新密码不一致' : ''">
+          <el-input type="password" v-model="modifyPasswordInfo.newPasswordAgain" placeholder="请再次输入新密码"/>
+        </el-form-item>
+        <div style="text-align: right; margin: 0">
+          <el-button size="small" text @click="modifyPasswordVisible = false">取消</el-button>
+          <el-button size="small" type="primary" @click="ConfirmModifyPassword" :disabled="passwordMismatch">确认</el-button>
+        </div>
+      </el-form>
+    </el-dialog>
+
+    <el-dialog v-model="modifyUserNameVisible" title="修改用户名">
+      <el-form
+          :label-position="left"
+          label-width="auto"
+          style="max-width: 600px"
+      >
+        <el-form-item label="新用户名">
+          <el-input v-model="modifyUserNameInfo.newUserName" placeholder="请输入新的用户名" required minlength="4"/>
+        </el-form-item>
+        <el-form-item label="密码">
+          <el-input type="password" v-model="modifyUserNameInfo.password" placeholder="请输入密码"/>
+        </el-form-item>
+        <div style="text-align: right; margin: 0">
+          <el-button size="small" text @click="modifyUserNameVisible = false">取消</el-button>
+          <el-button size="small" type="primary" @click="ConfirmModifyUserName">确认</el-button>
+        </div>
+      </el-form>
     </el-dialog>
   </div>
 </template>
@@ -482,6 +540,11 @@ const options = [
   }
 ]
 export default {
+  computed: {
+    UserFilled() {
+      return UserFilled
+    }
+  },
   components: {Search, Star, LineChart, User, StarFilled, UserFilled},
   data() {
     return {
@@ -494,11 +557,28 @@ export default {
       deleteFavoriteVisible: false,
       priceHistoryVisible: false,
       discountProductListVisible : false,
+      selectedPlatform: '',
+      modifyPasswordVisible :false,
+      modifyUserNameVisible : false,
 
       showPriceHistoryProductId: '',
       searchProduct : '',
       favoriteProductId : '',
       favoriteEmail: '',
+
+      user: {
+        name: 'John Doe',
+        email: 'john.doe@example.com'
+      },
+      modifyPasswordInfo :{
+        oldPassword : '',
+        newPassword : '',
+        newPasswordAgain : ''
+      },
+      modifyUserNameInfo :{
+        newUserName: '',
+        password: '',
+      },
 
       productList:[{
         name: '',
@@ -601,6 +681,10 @@ export default {
             ElMessage.error("出现故障")
           })
     },
+    DeleteToken(){
+      ElMessage.success("登出成功");
+      sessionStorage.clear()
+    },
     filterProducts(selected) {
       if (selected.length === 1) {
         this.filteredProductList = this.productList.filter(product => product.category.includes(selected[0]));
@@ -618,6 +702,86 @@ export default {
       } else {
         this.filteredProductList = this.productList;
       }
+    },
+    ConfirmModifyPassword(){
+      if(this.modifyPasswordInfo.oldPassword === ''){
+        ElMessage.error("请输入旧密码");
+        return;
+      }
+      if(this.modifyPasswordInfo.newPassword === ''){
+        ElMessage.error("请输入新密码");
+        return;
+      }
+      if(this.modifyPasswordInfo.newPassword.length < 6){
+        ElMessage.error("新密码长度不能小于6");
+        return;
+      }
+      if(this.modifyPasswordInfo.newPassword === this.modifyPasswordInfo.oldPassword){
+        ElMessage.error("新密码不能与旧密码相同");
+        return;
+      }
+      axios.post("/user/modifyPassword", {
+        email: this.user.email,
+        oldPassword: this.modifyPasswordInfo.oldPassword,
+        newPassword: this.modifyPasswordInfo.newPassword
+      })
+          .then(response => {
+            if(response.data.code === 1){
+              ElMessage.success("修改密码成功");
+              this.modifyPasswordVisible = false;
+              this.modifyPasswordInfo.oldPassword = '';
+              this.modifyPasswordInfo.newPassword = '';
+              this.modifyPasswordInfo.newPasswordAgain = '';
+            }else{
+              ElMessage.error(response.data.message)
+            }
+          })
+          .catch(error => {
+            ElMessage.error("出现故障")
+          })
+    },
+
+    ConfirmModifyUserName(){
+      if(this.modifyUserNameInfo.newUserName === ''){
+        ElMessage.error("新用户名不能为空");
+        return;
+      }
+      if(this.modifyUserNameInfo.password === ''){
+        ElMessage.error("请输入密码");
+        return;
+      }
+      if(this.modifyUserNameInfo.newUserName.length < 4){
+        ElMessage.error("新用户名长度不能小于4");
+        return;
+      }
+      if(this.modifyUserNameInfo.newUserName.length > 20){
+        ElMessage.error("新用户名长度不能大于20");
+        return;
+      }
+      if(this.modifyUserNameInfo.newUserName.length > 20){
+        ElMessage.error("新用户名长度不能大于20");
+        return;
+      }
+      axios.post("/user/modifyUserName", {
+        email: this.user.email,
+        newName: this.modifyUserNameInfo.newUserName,
+        password: this.modifyUserNameInfo.password
+      })
+          .then(response => {
+            if(response.data.code === 1){
+              ElMessage.success("修改用户名成功");
+              this.user.name = this.modifyUserNameInfo.newUserName;
+              sessionStorage.setItem("userName", this.modifyUserNameInfo.newUserName);
+              this.modifyUserNameVisible = false;
+              this.modifyUserNameInfo.newUserName = '';
+              this.modifyUserNameInfo.password = '';
+            }else{
+              ElMessage.error(response.data.message)
+            }
+          })
+          .catch(error => {
+            ElMessage.error("出现故障")
+          })
     },
 
     sortPriceAsc() {
@@ -637,6 +801,8 @@ export default {
       this.isMobile = true;
     }
     this.GetFavorites();
+    this.user.name = sessionStorage.getItem("userName");
+    this.user.email = sessionStorage.getItem("token");
     if(sessionStorage.getItem('discountProductList') != null){
       this.discountProductList = JSON.parse(sessionStorage.getItem('discountProductList'));
       if(this.discountProductList.length > 0){

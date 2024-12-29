@@ -5,7 +5,7 @@
       <el-header class="title" v-if="!isMobile">
         <div style="margin-top: 12px; display: inline-block;">
           <span style="font-size: large; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: bold;">Price Comparator</span>
-          <span style="margin-left :30px; font-size: large; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: bold;">用户您好！</span>
+          <span style="margin-left :30px; font-size: large; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: bold;">用户 {{this.user.name}} 您好！</span>
           <RouterLink to="/user">
             <button class="transparent-button">
               <span style="margin-left: 40px; font-size: medium; font-family: 'Microsoft YaHei'; color: #ffffff; font-weight: lighter">搜索商品</span>
@@ -159,7 +159,7 @@
               </div>
             </div>
             <div class="button-container">
-              <button class="collect-button" @click = "this.favoriteProductId = product.id, favoriteProduct">
+              <button class="collect-button" @click = "this.favoriteProductId = product.id, favoriteProduct()">
                 收藏商品
               </button>
               <button class="history-button" @click = "this.showPriceHistoryProductId = product.id, GetProductPriceHistory()">
@@ -268,7 +268,7 @@
           <el-input type="password" v-model="modifyPasswordInfo.oldPassword" placeholder="请输入旧密码"/>
         </el-form-item>
         <el-form-item label="新密码">
-          <el-input type="password" v-model="modifyPasswordInfo.newPassword" placeholder="请输入新密码"/>
+          <el-input type="password" v-model="modifyPasswordInfo.newPassword" placeholder="请输入新密码" required minlength="6"/>
         </el-form-item>
         <el-form-item label="再次输入新密码" :error="passwordMismatch ? '两次输入的新密码不一致' : ''">
           <el-input type="password" v-model="modifyPasswordInfo.newPasswordAgain" placeholder="请再次输入新密码"/>
@@ -287,7 +287,7 @@
           style="max-width: 600px"
       >
         <el-form-item label="新用户名">
-          <el-input v-model="modifyUserNameInfo.newUserName" placeholder="请输入新的用户名"/>
+          <el-input v-model="modifyUserNameInfo.newUserName" placeholder="请输入新的用户名" required minlength="4"/>
         </el-form-item>
         <el-form-item label="密码">
           <el-input type="password" v-model="modifyUserNameInfo.password" placeholder="请输入密码"/>
@@ -476,6 +476,22 @@ export default {
     },
 
     ConfirmModifyPassword(){
+      if(this.modifyPasswordInfo.oldPassword === ''){
+        ElMessage.error("请输入旧密码");
+        return;
+      }
+      if(this.modifyPasswordInfo.newPassword === ''){
+        ElMessage.error("请输入新密码");
+        return;
+      }
+      if(this.modifyPasswordInfo.newPassword.length < 6){
+        ElMessage.error("新密码长度不能小于6");
+        return;
+      }
+      if(this.modifyPasswordInfo.newPassword === this.modifyPasswordInfo.oldPassword){
+        ElMessage.error("新密码不能与旧密码相同");
+        return;
+      }
       axios.post("/user/modifyPassword", {
         email: this.user.email,
         oldPassword: this.modifyPasswordInfo.oldPassword,
@@ -498,6 +514,22 @@ export default {
     },
 
     ConfirmModifyUserName(){
+      if(this.modifyUserNameInfo.newUserName === ''){
+        ElMessage.error("新用户名不能为空");
+        return;
+      }
+      if(this.modifyUserNameInfo.password === ''){
+        ElMessage.error("请输入密码");
+        return;
+      }
+      if(this.modifyUserNameInfo.newUserName.length < 4){
+        ElMessage.error("新用户名长度不能小于4");
+        return;
+      }
+      if(this.modifyUserNameInfo.newUserName.length > 20){
+        ElMessage.error("新用户名长度不能大于20");
+        return;
+      }
       axios.post("/user/modifyUserName", {
         email: this.user.email,
         newName: this.modifyUserNameInfo.newUserName,
@@ -525,6 +557,7 @@ export default {
     },
 
     DeleteToken(){
+      ElMessage.success("登出成功");
       sessionStorage.clear()
     },
 

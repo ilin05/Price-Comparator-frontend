@@ -176,6 +176,7 @@ export default {
     },
 
     DeleteToken(){
+      ElMessage.success("登出成功");
       sessionStorage.clear()
     }
   },

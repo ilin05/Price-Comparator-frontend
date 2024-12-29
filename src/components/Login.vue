@@ -2,6 +2,12 @@
   <div>
     <div class="main" style="overflow-y: hidden; ">
       <el-container>
+        <header class="header">
+          <div class="header-content">
+            <h1 class="site-title">Price Comparator</h1>
+            <p class="welcome-subtitle">欢迎来到商品比价平台！</p>
+          </div>
+        </header>
 
         <el-main class="background_container" style="display: flex;" :router = "true">
           <el-card title="登录" class="login_card" style="display: flex; justify-content: center ; vertical-align: center">
@@ -77,11 +83,57 @@ input {
 }
 
 .background_container{
-  background:url("@/assets/figure2.jpg");
+  background:url("@/assets/background.png");
   width:100%;
   height:100%;
   position:fixed;
-  background-size:100% 100%;
+  background-size: cover;
+}
+
+.header {
+  background: linear-gradient(135deg, #1e3c72, #2a5298); /* 渐变背景 */
+  color: white;
+  padding: 20px 40px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* 阴影效果 */
+  position: relative;
+  overflow: hidden;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('https://via.placeholder.com/150') no-repeat center center; /* 背景图案 */
+  opacity: 0.1;
+  z-index: 0;
+}
+
+.header-content {
+  position: relative;
+  z-index: 1;
+}
+
+.site-title {
+  font-size: 3rem;
+  font-weight: bold;
+  margin: 0;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #ff8a00, #e52e71); /* 文字渐变 */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.welcome-subtitle {
+  font-size: 1.5rem;
+  margin-top: 10px;
+  color: #f1f1f1;
+  font-weight: 500;
+  letter-spacing: 1px;
 }
 </style>
 
@@ -127,10 +179,14 @@ export default {
             if(response.data.code === 1){
               this.discountProductList = response.data.payload;
               sessionStorage.setItem("discountProductList", JSON.stringify(this.discountProductList));
-              // this.discountProductList.forEach((item)=>{
-              //   console.log(item)
-              // })
-              ElMessage.success("查询折扣商品成功");
+              this.discountProductList.forEach((item)=>{
+                console.log(item)
+              })
+              if(this.discountProductList.length === 0){
+                ElMessage.success("您收藏的商品暂无折扣");
+              }else{
+                ElMessage.success("查询折扣商品成功");
+              }
               window.location.reload();
             }else{
               ElMessage.error(response.data)
@@ -141,6 +197,15 @@ export default {
           })
     },
     ConfirmUserLogin(){
+      //如果userLoginInfo.email和userLoginInfo.password为空，则提示用户输入
+      if(this.userLoginInfo.email === ''){
+        ElMessage.error("请输入邮箱");
+        return;
+      }
+      if(this.userLoginInfo.password === ''){
+        ElMessage.error("请输入密码");
+        return;
+      }
       axios.post("/user/login",{
         email:this.userLoginInfo.email,
         password:this.userLoginInfo.password
